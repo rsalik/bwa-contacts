@@ -1,0 +1,53 @@
+$accent: 'accent';
+$bkg: 'bkg';
+$color: 'color';
+$black: 'blk';
+$white: 'wte';
+$secondary: 'secondary';
+$delete: 'delete';
+
+$themes: (
+  default: (
+    bkg: #eee,
+    blk: black,
+    wte: #eee,
+    color: black,
+    secondary: #14e4d2,
+    accent: #8414cf,
+    delete: #e24343,
+  ),
+  dark: (
+    bkg: #121212,
+    blk: #121212,
+    color: #eee,
+    wte: #eee,
+    secondary: #5febdf,
+    accent: #bf75ff,
+    delete: #ff7070,
+  ),
+);
+
+// https://medium.com/@katiemctigue/how-to-create-a-dark-mode-in-sass-609f131a3995
+@mixin themed() {
+  @each $theme, $map in $themes {
+    &.theme--#{$theme},
+    .theme--#{$theme} & {
+      $theme-map: () !global;
+      @each $key, $submap in $map {
+        $value: map-get(map-get($themes, $theme), '#{$key}');
+        $theme-map: map-merge(
+          $theme-map,
+          (
+            $key: $value,
+          )
+        ) !global;
+      }
+      @content;
+      $theme-map: null !global;
+    }
+  }
+}
+
+@function t($key) {
+  @return map-get($theme-map, $key);
+}
