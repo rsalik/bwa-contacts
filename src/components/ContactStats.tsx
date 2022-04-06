@@ -15,7 +15,7 @@ export default function ContactStats(props: { data: any[]; lastUpdated: number, 
         <div className="row">
           <span className="bold">Contacts App By</span> Ryan Salik
         </div>
-        <div className="btn" onClick={props.onDeleteAll}>Delete All</div>
+        <div className="btn" onClick={props.onDeleteAll}>Delete All Contacts</div>
       </div>
     </div>
   );
