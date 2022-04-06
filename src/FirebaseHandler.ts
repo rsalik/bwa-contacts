@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref } from 'firebase/database';
+import { getAuth, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyBRP8LjBouuluROgvHdYqDNnlF6pf69opA',
@@ -16,5 +17,25 @@ const firebaseConfig = {
 const fbApp = initializeApp(firebaseConfig);
 export const db = getDatabase(fbApp);
 
-export const contactsRef = ref(db, 'contacts');
-export const timestampRef = ref(db, 'last_updated');
+export function getContactsRef(uid: string) {
+  return ref(db, `${uid}/contacts`)
+}
+
+export function getTimestampRef(uid: string) {
+  return ref(db, `${uid}/last_updated`)
+}
+
+// Initialize Firebase Auth
+const provider = new GoogleAuthProvider();
+provider.addScope('https://www.googleapis.com/auth/contacts.readonly');
+const auth = getAuth();
+
+export async function signIn() {
+  try {
+    const res = await signInWithPopup(auth, provider);
+
+    return { user: res.user, token: GoogleAuthProvider.credentialFromResult(res)?.accessToken };
+  } catch (err) {
+    return null;
+  }
+}
