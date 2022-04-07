@@ -98,6 +98,37 @@ body {
     }
   }
 
+  &.warning {
+    .content {
+      @include themed() {
+        color: t($black);
+        background: t($red);
+      }
+
+      .row:nth-of-type(even) {
+        @include themed() {
+          background: mix(t($red), black, 90%);
+        }
+
+        font-size: 1.5rem;
+        margin: 0.5rem 0;
+      }
+
+      .btn {
+        @include themed() {
+          background: t($black);
+          color: t($red);
+        }
+
+        &:hover {
+          @include themed() {
+            background: mix(t($black), t($red), 65%);
+          }
+        }
+      }
+    }
+  }
+
   &.accented {
     .content {
       @include themed() {
@@ -257,7 +288,7 @@ body {
     display: flex;
     align-items: center;
   }
-  
+
   justify-content: space-between;
 
   padding: 0.5em;
@@ -295,14 +326,50 @@ body {
 
     cursor: pointer;
 
-    transition: color .2s ease-in-out !important;
+    transition: color 0.2s ease-in-out !important;
 
     &:hover {
       @include themed() {
-        color: t($delete);
+        color: t($red);
       }
     }
 
     transform: scale(2);
+  }
+}
+
+.panel.popup {
+  z-index: 10;
+  
+  position: fixed;
+
+  width: 105%;
+  height: 100%;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  .warning {
+    font-size: 1.4em;
+
+    strong {
+      text-decoration: underline;
+      font-weight: $fw-bold;
+    }
+  }
+
+  .content {
+    width: 90%;
+
+    backdrop-filter: blur(5px);
+  }
+
+  &.warning {
+    .content {
+      @include themed() {
+        background: rgba(mix(t($red), t($color), 85%), 0.9);
+      }
+    }
   }
 }

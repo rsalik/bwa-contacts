@@ -1,4 +1,4 @@
-export default function ContactStats(props: { data: any[]; lastUpdated: number, onDeleteAll: () => void, user: any }) {
+export default function ContactStats(props: { data: any[]; lastUpdated: number, onDeleteAll: () => void, onSyncContacts: () => void, user: any }) {
   return (
     <div className="contact-stats panel half secondary">
       <div className="content">
@@ -19,6 +19,7 @@ export default function ContactStats(props: { data: any[]; lastUpdated: number, 
           <span className="bold">Contacts App By</span> Ryan Salik
         </div>
         <div className="btn" onClick={props.onDeleteAll}>Delete All Contacts</div>
+        <div className="btn" onClick={props.onSyncContacts}>Sync Google Contacts</div>
       </div>
     </div>
   );

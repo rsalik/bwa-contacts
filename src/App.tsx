@@ -3,16 +3,18 @@ import AddContact from './components/AddContact';
 import Contacts from './components/Contacts';
 import ContactStats from './components/ContactStats';
 import { DarkModeRounded, LightModeRounded } from '@mui/icons-material';
-import { getContactsRef, getTimestampRef } from './FirebaseHandler';
+import { getContacts, getContactsRef, getTimestampRef } from './FirebaseHandler';
 import { onValue, set } from '@firebase/database';
 import './styles/style.scss';
 import SignIn from './components/SignIn';
+import SyncContactsPopup from './components/SyncContactsPopup';
 
 function App() {
   const [contacts, setContacts] = React.useState([] as any[]);
   const [theme, setTheme] = React.useState('default');
   const [timestamp, setTimestamp] = React.useState(Date.now());
   const [userInfo, setUserInfo] = React.useState(undefined as any);
+  const [showSyncContactsPopup, setShowSyncContactsPopup] = React.useState(false);
 
   // Firebase Refs
   const contactsRef = React.useRef(undefined as any);
@@ -53,12 +55,12 @@ function App() {
     }
   }, [theme]);
 
-  function onAddContact(contact: any) {
+  function addContact(contact: any) {
     set(contactsRef.current, [...contacts, contact]);
     set(timestampRef.current, Date.now());
   }
 
-  function onDeleteContact(id: number) {
+  function deleteContact(id: number) {
     set(
       contactsRef.current,
       contacts.filter((c) => c.id !== id)
@@ -66,10 +68,37 @@ function App() {
     set(timestampRef.current, Date.now());
   }
 
-  function onDeleteAll() {
+  function deleteAllContacts() {
     setContacts([]); // Deleting all contacts will not trigger onValue
     set(contactsRef.current, []);
     set(timestampRef.current, Date.now());
+  }
+
+  async function syncContacts() {
+    let contacts = await getContacts(userInfo.token);
+
+    deleteAllContacts();
+
+    set(
+      contactsRef.current,
+      contacts.map((c) => {
+        return {
+          firstName: c.names?.[0].givenName || '',
+          lastName: c.names?.[0].familyName || '',
+          email: c.emailsAddresses?.[0].value || '',
+          phone: c.phoneNumbers?.[0].value || '',
+        };
+      }).sort((a, b) => {
+        return a.firstName.localeCompare(b.firstName);
+      })
+    );
+    set(timestampRef.current, Date.now());
+
+    setShowSyncContactsPopup(false);
+  }
+
+  function onStartSyncContacts() {
+    setShowSyncContactsPopup(true);
   }
 
   function onSignIn(user: any) {
@@ -88,13 +117,20 @@ function App() {
           )}
         </span>
       </div>
+      {showSyncContactsPopup && <SyncContactsPopup onClose={() => setShowSyncContactsPopup(false)} onSync={syncContacts} />}
       {!userInfo ? (
         <SignIn onSignIn={onSignIn} />
       ) : (
         <React.Fragment>
-          <AddContact onAdd={onAddContact} />
-          <ContactStats data={contacts} lastUpdated={timestamp} onDeleteAll={onDeleteAll} user={userInfo} />
-          <Contacts data={contacts} onDelete={onDeleteContact} />
+          <AddContact onAdd={addContact} />
+          <ContactStats
+            data={contacts}
+            lastUpdated={timestamp}
+            onDeleteAll={deleteAllContacts}
+            onSyncContacts={onStartSyncContacts}
+            user={userInfo}
+          />
+          <Contacts data={contacts} onDelete={deleteContact} />
         </React.Fragment>
       )}
     </div>

@@ -4,7 +4,7 @@ $color: 'color';
 $black: 'blk';
 $white: 'wte';
 $secondary: 'secondary';
-$delete: 'delete';
+$red: 'cred';
 
 $themes: (
   default: (
@@ -14,7 +14,7 @@ $themes: (
     color: black,
     secondary: #14e4d2,
     accent: #8414cf,
-    delete: #e24343,
+    cred: #e24343,
   ),
   dark: (
     bkg: #121212,
@@ -23,7 +23,7 @@ $themes: (
     wte: #eee,
     secondary: #5febdf,
     accent: #bf75ff,
-    delete: #ff7070,
+    cred: #ff7070,
   ),
 );
 
