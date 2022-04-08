@@ -1,12 +1,8 @@
 import { signIn } from '../FirebaseHandler';
 
-export default function SignIn(props: { onSignIn: Function }) {
+export default function SignIn() {
   function onSignIn() {
-    signIn().then((res) => {
-      if (res) {
-        props.onSignIn(res);
-      }
-    });
+    signIn();
   }
 
   return (

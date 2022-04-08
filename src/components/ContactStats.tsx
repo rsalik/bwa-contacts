@@ -10,7 +10,7 @@ export default function ContactStats(props: { data: any[]; lastUpdated: number, 
           <span className="bold">Last Updated</span>: {new Date(props.lastUpdated).toLocaleString()}
         </div>
         <div className="row">
-          <span className="bold">User</span> {props.user.user.email}
+          <span className="bold">User</span> {props.user.email}
         </div>
         <div className="row">
           <span className="bold">Data Hosted By</span> Firebase

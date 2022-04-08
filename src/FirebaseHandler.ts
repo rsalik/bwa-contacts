@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref } from 'firebase/database';
-import { getAuth, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { getAuth, signInWithPopup, GoogleAuthProvider, browserLocalPersistence, setPersistence, NextOrObserver, User } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyBRP8LjBouuluROgvHdYqDNnlF6pf69opA',
@@ -19,6 +19,8 @@ const firebaseConfig = {
 const fbApp = initializeApp(firebaseConfig);
 export const db = getDatabase(fbApp);
 
+let accessToken = undefined as string | undefined;
+
 export function getContactsRef(uid: string) {
   return ref(db, `${uid}/contacts`);
 }
@@ -32,23 +34,34 @@ const provider = new GoogleAuthProvider();
 firebaseConfig.scopes.forEach((scope) => provider.addScope(scope));
 
 const auth = getAuth();
+setPersistence(auth, browserLocalPersistence);
 
 export async function signIn() {
   try {
     const res = await signInWithPopup(auth, provider);
-
-    console.log(await getContacts(GoogleAuthProvider.credentialFromResult(res)?.accessToken || ''));
-    return { user: res.user, token: GoogleAuthProvider.credentialFromResult(res)?.accessToken };
-
+    accessToken = GoogleAuthProvider.credentialFromResult(res)?.accessToken;
     // Initialize Google API client
   } catch (err) {
     return null;
   }
 }
 
+export function onAuthStateChange(callback: NextOrObserver<User | null>) {
+  auth.onAuthStateChanged(callback);
+}
+
 // Using the REST API because using Firebase Auth with Google APIs is either impossible or just terribly documented
-export async function getContacts(accessToken: string) {
+export async function getContacts() {
   const contacts = [] as any[];
+
+  if (!accessToken) {
+    await signIn();
+
+    // If user does not sign in, return empty array
+    if (!accessToken) {
+      return contacts;
+    }
+  }
 
   let nextPageToken = undefined;
   do {

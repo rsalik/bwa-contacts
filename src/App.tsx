@@ -3,7 +3,7 @@ import AddContact from './components/AddContact';
 import Contacts from './components/Contacts';
 import ContactStats from './components/ContactStats';
 import { DarkModeRounded, LightModeRounded } from '@mui/icons-material';
-import { getContacts, getContactsRef, getTimestampRef } from './FirebaseHandler';
+import { getContacts, getContactsRef, getTimestampRef, onAuthStateChange } from './FirebaseHandler';
 import { onValue, set } from '@firebase/database';
 import './styles/style.scss';
 import SignIn from './components/SignIn';
@@ -13,22 +13,35 @@ function App() {
   const [contacts, setContacts] = React.useState([] as any[]);
   const [theme, setTheme] = React.useState('default');
   const [timestamp, setTimestamp] = React.useState(Date.now());
-  const [userInfo, setUserInfo] = React.useState(undefined as any);
+  const [user, setUser] = React.useState(undefined as any);
   const [showSyncContactsPopup, setShowSyncContactsPopup] = React.useState(false);
 
   // Firebase Refs
   const contactsRef = React.useRef(undefined as any);
   const timestampRef = React.useRef(undefined as any);
 
+  // Create authStateChange hook
   useEffect(() => {
-    if (userInfo) {
+    onAuthStateChange((user) => {
+      console.log(user);
+
+      if (user) {
+        setUser(user);
+      } else {
+        setUser(undefined);
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    if (user) {
       // Stop listening to current refs, if they exist
       contactsRef.current?.off?.();
       timestampRef.current?.off?.();
 
       // Update Refs on User change
-      contactsRef.current = getContactsRef(userInfo.user.uid);
-      timestampRef.current = getTimestampRef(userInfo.user.uid);
+      contactsRef.current = getContactsRef(user.uid);
+      timestampRef.current = getTimestampRef(user.uid);
 
       // Set up Firebase Realtime Database Hooks
       onValue(contactsRef.current, (snapshot) => {
@@ -43,7 +56,7 @@ function App() {
       contactsRef.current = undefined;
       timestampRef.current = undefined;
     }
-  }, [userInfo]);
+  }, [user]);
 
   // Update Themes
   useEffect(() => {
@@ -75,34 +88,34 @@ function App() {
   }
 
   async function syncContacts() {
-    let contacts = await getContacts(userInfo.token);
+    let contacts = await getContacts();
+
+    setShowSyncContactsPopup(false);
+
+    if (!contacts.length) return;
 
     deleteAllContacts();
 
     set(
       contactsRef.current,
-      contacts.map((c) => {
-        return {
-          firstName: c.names?.[0].givenName || '',
-          lastName: c.names?.[0].familyName || '',
-          email: c.emailsAddresses?.[0].value || '',
-          phone: c.phoneNumbers?.[0].value || '',
-        };
-      }).sort((a, b) => {
-        return a.firstName.localeCompare(b.firstName);
-      })
+      contacts
+        .map((c) => {
+          return {
+            firstName: c.names?.[0].givenName || '',
+            lastName: c.names?.[0].familyName || '',
+            email: c.emailsAddresses?.[0].value || '',
+            phone: c.phoneNumbers?.[0].value || '',
+          };
+        })
+        .sort((a, b) => {
+          return a.firstName.localeCompare(b.firstName);
+        })
     );
     set(timestampRef.current, Date.now());
-
-    setShowSyncContactsPopup(false);
   }
 
   function onStartSyncContacts() {
     setShowSyncContactsPopup(true);
-  }
-
-  function onSignIn(user: any) {
-    setUserInfo(user);
   }
 
   return (
@@ -118,8 +131,8 @@ function App() {
         </span>
       </div>
       {showSyncContactsPopup && <SyncContactsPopup onClose={() => setShowSyncContactsPopup(false)} onSync={syncContacts} />}
-      {!userInfo ? (
-        <SignIn onSignIn={onSignIn} />
+      {!user ? (
+        <SignIn />
       ) : (
         <React.Fragment>
           <AddContact onAdd={addContact} />
@@ -128,7 +141,7 @@ function App() {
             lastUpdated={timestamp}
             onDeleteAll={deleteAllContacts}
             onSyncContacts={onStartSyncContacts}
-            user={userInfo}
+            user={user}
           />
           <Contacts data={contacts} onDelete={deleteContact} />
         </React.Fragment>
