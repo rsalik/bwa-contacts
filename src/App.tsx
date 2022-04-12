@@ -3,8 +3,8 @@ import AddContact from './components/AddContact';
 import Contacts from './components/Contacts';
 import ContactStats from './components/ContactStats';
 import { DarkModeRounded, LightModeRounded } from '@mui/icons-material';
-import { getContacts, getContactsRef, getTimestampRef, onAuthStateChange } from './FirebaseHandler';
-import { onValue, set } from '@firebase/database';
+import { getContacts, getContactsRef, getThemeRef, getTimestampRef, onAuthStateChange } from './FirebaseHandler';
+import { onValue, set, get } from '@firebase/database';
 import './styles/style.scss';
 import SignIn from './components/SignIn';
 import SyncContactsPopup from './components/SyncContactsPopup';
@@ -19,6 +19,7 @@ function App() {
   // Firebase Refs
   const contactsRef = React.useRef(undefined as any);
   const timestampRef = React.useRef(undefined as any);
+  const themeRef = React.useRef(undefined as any);
 
   // Create authStateChange hook
   useEffect(() => {
@@ -38,10 +39,12 @@ function App() {
       // Stop listening to current refs, if they exist
       contactsRef.current?.off?.();
       timestampRef.current?.off?.();
+      themeRef.current?.off?.();
 
       // Update Refs on User change
       contactsRef.current = getContactsRef(user.uid);
       timestampRef.current = getTimestampRef(user.uid);
+      themeRef.current = getThemeRef(user.uid);
 
       // Set up Firebase Realtime Database Hooks
       onValue(contactsRef.current, (snapshot) => {
@@ -52,6 +55,11 @@ function App() {
       onValue(timestampRef.current, (snapshot) => {
         setTimestamp(snapshot.val());
       });
+
+      // Theme ref once
+      get(themeRef.current).then((snapshot) => {
+        if (snapshot.val()) setTheme(snapshot.val());
+      });
     } else {
       contactsRef.current = undefined;
       timestampRef.current = undefined;
@@ -61,6 +69,8 @@ function App() {
   // Update Themes
   useEffect(() => {
     const body = document.querySelector('body');
+
+    if (themeRef.current) set(themeRef.current, theme);
 
     if (body) {
       body.classList.forEach((c) => body.classList.remove(c));

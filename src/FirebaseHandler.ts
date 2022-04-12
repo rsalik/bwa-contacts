@@ -29,6 +29,10 @@ export function getTimestampRef(uid: string) {
   return ref(db, `${uid}/last_updated`);
 }
 
+export function getThemeRef(uid: string) {
+  return ref(db, `${uid}/prefer_theme`);
+}
+
 // Initialize Firebase Auth
 const provider = new GoogleAuthProvider();
 firebaseConfig.scopes.forEach((scope) => provider.addScope(scope));
